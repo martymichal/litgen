@@ -70,14 +70,17 @@ def adapt_modifiable_immutable_to_return(adapted_function: AdaptedFunction) -> O
     for old_adapted_param in old_function_params:
         if old_adapted_param.is_modifiable_python_immutable_ref_or_pointer():
             is_pointer = old_adapted_param.cpp_element().decl.cpp_type.modifiers == ["*"]
+            is_double_pointer = old_adapted_param.cpp_element().decl.cpp_type.modifiers == ["*", "*"]
 
             # For signatures like
             #       void foo(bool * flag = NULL);
             # the python param type will be type Optional[BoxedBool]
-            def compute_is_optional_boxed_type(old_adapted_param=old_adapted_param, is_pointer=is_pointer) -> bool:  # type: ignore
+            def compute_is_optional_boxed_type(
+                old_adapted_param=old_adapted_param, is_pointer=is_pointer, is_double_pointer=is_double_pointer
+            ) -> bool:  # type: ignore
                 initial_value_cpp = old_adapted_param.cpp_element().decl.initial_value_code
                 is_initial_value_null = initial_value_cpp in ["NULL", "nullptr"]
-                return is_pointer and is_initial_value_null
+                return (is_pointer or is_double_pointer) and is_initial_value_null
 
             is_optional_type = compute_is_optional_boxed_type()
 
@@ -89,6 +92,8 @@ def adapt_modifiable_immutable_to_return(adapted_function: AdaptedFunction) -> O
             old_decl = old_adapted_param.cpp_element().decl
             new_decl.cpp_type.typenames = old_decl.cpp_type.typenames
             new_decl.cpp_type.modifiers = []
+            if is_double_pointer:
+                new_decl.cpp_type.modifiers = ["*"]
             new_decl.cpp_type.specifiers = []
             if is_optional_type:
                 new_decl.cpp_type.typenames = [f"std::optional<{new_decl.cpp_type.str_code()}>"]
@@ -114,7 +119,11 @@ def adapt_modifiable_immutable_to_return(adapted_function: AdaptedFunction) -> O
                     {_i_}{param_name_value} = & (*{param_name});
                 """
             else:
-                if is_pointer:
+                if is_double_pointer:
+                    lambda_input_code = f"""
+                        {param_original_type} {param_name_value} = & {param_name};
+                        """
+                elif is_pointer:
                     lambda_input_code = f"""
                         {param_original_type} {param_name_value} = & {param_name};
                         """

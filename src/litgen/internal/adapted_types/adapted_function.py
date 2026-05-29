@@ -62,9 +62,11 @@ class AdaptedParameter(AdaptedElement):
         type_specifiers = self.cpp_element().decl.cpp_type.specifiers
 
         is_reference_or_pointer = (type_modifiers == ["*"]) or (type_modifiers == ["&"])
+        is_double_pointer = type_modifiers == ['*', '*']
         is_const = "const" in type_specifiers
         is_modifiable = is_reference_or_pointer and not is_const
-        r = is_modifiable and is_python_immutable
+        r = (is_modifiable and is_python_immutable) or is_double_pointer
+
         return r
 
     def is_const_char_pointer_with_default_null(self) -> bool:
