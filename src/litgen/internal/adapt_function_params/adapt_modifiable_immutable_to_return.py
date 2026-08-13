@@ -217,7 +217,7 @@ def adapt_modifiable_immutable_to_return(adapted_function: AdaptedFunction) -> O
             type_list = []
             name_list = []
             if not was_void_return_type:
-                type_list.append(old_function.return_type.str_code())
+                type_list.append(old_function.return_type.name_without_modifier_specifier())
                 name_list.append("r")
             for new_output_function_param in new_output_function_params:
                 type_list.append(new_output_function_param.full_type())
