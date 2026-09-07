@@ -12,6 +12,7 @@ from litgen.internal.adapted_types import AdaptedFunction
 
 
 def apply_all_adapters(inout_adapted_function: AdaptedFunction) -> None:
+    from litgen.internal.adapt_function.adapt_encapsulate_incomplete_types import adapt_encapsulate_incomplete_types
     from litgen.internal.adapt_function_params._adapt_exclude_params import adapt_exclude_params
     from litgen.internal.adapt_function_params._adapt_c_arrays import adapt_c_arrays
     from litgen.internal.adapt_function_params._adapt_c_string_list import (
@@ -59,6 +60,7 @@ def apply_all_adapters(inout_adapted_function: AdaptedFunction) -> None:
         adapt_c_string_list,
         adapt_c_string_list_no_count,
         adapt_variadic_format,
+        adapt_encapsulate_incomplete_types,
     ]
     all_adapters_functions += inout_adapted_function.options.fn_custom_adapters
 

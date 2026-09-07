@@ -358,6 +358,13 @@ class LitgenOptions:
     fn_params_replace_c_string_list__regex: RegexOrMatcher = r".*"
 
     # ------------------------------------------------------------------------------
+    # Handle C style opaque pointers (used with incomplete types) by wrapping
+    # them in a capsule.
+    # ------------------------------------------------------------------------------
+    #
+    fn_encapsulate_incomplete_types__regex: RegexOrMatcher = r""
+
+    # ------------------------------------------------------------------------------
     # Make "immutable python types" modifiable, when passed by pointer or reference
     # ------------------------------------------------------------------------------
     #
