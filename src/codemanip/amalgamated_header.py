@@ -207,6 +207,7 @@ def _amalgamate_one_file(
 
     lines = _fread_lines(included_filename_full_path)
     was_file_interrupted_by_include = False
+    has_include_file = False
     for code_line in lines:
         if (
             was_file_interrupted_by_include
@@ -216,8 +217,10 @@ def _amalgamate_one_file(
             parsed_result = parsed_result + _decorate_code_info(included_filename_relative + " continued") + "\n"
             was_file_interrupted_by_include = False
 
-        if _has_include_guard(code_line):
-            already_included_guarded_local_files.append(included_filename_full_path)
+        if not has_include_file:
+            if _has_include_guard(code_line):
+                already_included_guarded_local_files.append(included_filename_full_path)
+                has_include_file = True
 
         if _is_external_include_line(options, code_line):
             external_file = _extract_external_include_file(code_line)
