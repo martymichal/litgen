@@ -160,8 +160,8 @@ def _decorate_code_info(info: str) -> str:
     return result
 
 
-def _has_include_guard(filename: str) -> bool:
-    return _PRAGMA_ONCE_RE.search(_fread_content(filename)) is not None
+def _has_include_guard(code_line: str) -> bool:
+    return _PRAGMA_ONCE_RE.search(code_line) is not None
 
 def _amalgamate_one_file(
     options: AmalgamationOptions,
@@ -197,9 +197,6 @@ def _amalgamate_one_file(
     if included_filename_full_path in already_included_guarded_local_files:
         return ""
 
-    if _has_include_guard(included_filename_full_path):
-        already_included_guarded_local_files.append(included_filename_full_path)
-
     included_filename_relative = included_filename.replace(options.base_dir + "/", "").replace(options.base_dir, "")
 
     if len(including_filename) > 0:
@@ -218,6 +215,10 @@ def _amalgamate_one_file(
         ):
             parsed_result = parsed_result + _decorate_code_info(included_filename_relative + " continued") + "\n"
             was_file_interrupted_by_include = False
+
+        if _has_include_guard(code_line):
+            already_included_guarded_local_files.append(included_filename_full_path)
+
         if _is_external_include_line(options, code_line):
             external_file = _extract_external_include_file(code_line)
             if external_file not in already_included_external_files:
