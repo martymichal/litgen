@@ -161,7 +161,8 @@ def _decorate_code_info(info: str) -> str:
 
 
 def _has_include_guard(code_line: str) -> bool:
-    return _PRAGMA_ONCE_RE.search(code_line) is not None
+    # return _PRAGMA_ONCE_RE.search(code_line) is not None
+    return "#pragma once" in code_line
 
 def _amalgamate_one_file(
     options: AmalgamationOptions,
