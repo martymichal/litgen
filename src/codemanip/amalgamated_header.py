@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import os
+import re
 from dataclasses import dataclass
 from sys import version_info
+
+
+_PRAGMA_ONCE_RE = re.compile(r"#pragma\s+once\n")
 
 
 @dataclass
@@ -156,11 +160,15 @@ def _decorate_code_info(info: str) -> str:
     return result
 
 
+def _has_include_guard(code_line: str) -> bool:
+    # return _PRAGMA_ONCE_RE.search(code_line) is not None
+    return "#pragma once" in code_line
+
 def _amalgamate_one_file(
     options: AmalgamationOptions,
     included_filename: str,
     including_filename: str,
-    already_included_local_files: list[str],
+    already_included_guarded_local_files: list[str],
     already_included_external_files: list[str],
 ) -> str:
     """
@@ -187,10 +195,8 @@ def _amalgamate_one_file(
     if not os.path.isfile(included_filename_full_path):
         raise FileNotFoundError(included_filename)
 
-    if included_filename_full_path in already_included_local_files:
+    if included_filename_full_path in already_included_guarded_local_files:
         return ""
-
-    already_included_local_files.append(included_filename_full_path)
 
     included_filename_relative = included_filename.replace(options.base_dir + "/", "").replace(options.base_dir, "")
 
@@ -202,6 +208,7 @@ def _amalgamate_one_file(
 
     lines = _fread_lines(included_filename_full_path)
     was_file_interrupted_by_include = False
+    has_include_file = False
     for code_line in lines:
         if (
             was_file_interrupted_by_include
@@ -210,6 +217,12 @@ def _amalgamate_one_file(
         ):
             parsed_result = parsed_result + _decorate_code_info(included_filename_relative + " continued") + "\n"
             was_file_interrupted_by_include = False
+
+        if not has_include_file:
+            if _has_include_guard(code_line):
+                already_included_guarded_local_files.append(included_filename_full_path)
+                has_include_file = True
+
         if _is_external_include_line(options, code_line):
             external_file = _extract_external_include_file(code_line)
             if external_file not in already_included_external_files:
@@ -221,7 +234,7 @@ def _amalgamate_one_file(
                 options,
                 new_file,
                 included_filename_relative,
-                already_included_local_files,
+                already_included_guarded_local_files,
                 already_included_external_files,
             )
             if len(include_addition) > 0:
