@@ -85,7 +85,8 @@ def adapt_encapsulate_incomplete_types(
             continue
 
         param_type: str = param.cpp_element().full_type()
-        new_param_name: str = f"{param_name}_encapsulated"
+        new_param_name: str = f"{param_name}"
+        param_name = f"{param_name}_value"
 
         new_param: CppParameter = copy.deepcopy(param.cpp_element())
         new_param.decl.cpp_type.typenames = ["nb::capsule"]
