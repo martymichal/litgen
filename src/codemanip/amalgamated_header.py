@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import os
+import re
 from dataclasses import dataclass
 from sys import version_info
+
+
+_PRAGMA_ONCE_RE = re.compile(r"#pragma\s+once\n")
 
 
 @dataclass
@@ -156,11 +160,14 @@ def _decorate_code_info(info: str) -> str:
     return result
 
 
+def _has_include_guard(filename: str) -> bool:
+    return _PRAGMA_ONCE_RE.search(_fread_content(filename)) is not None
+
 def _amalgamate_one_file(
     options: AmalgamationOptions,
     included_filename: str,
     including_filename: str,
-    already_included_local_files: list[str],
+    already_included_guarded_local_files: list[str],
     already_included_external_files: list[str],
 ) -> str:
     """
@@ -187,10 +194,11 @@ def _amalgamate_one_file(
     if not os.path.isfile(included_filename_full_path):
         raise FileNotFoundError(included_filename)
 
-    if included_filename_full_path in already_included_local_files:
+    if included_filename_full_path in already_included_guarded_local_files:
         return ""
 
-    already_included_local_files.append(included_filename_full_path)
+    if _has_include_guard(included_filename_full_path):
+        already_included_guarded_local_files.append(included_filename_full_path)
 
     included_filename_relative = included_filename.replace(options.base_dir + "/", "").replace(options.base_dir, "")
 
@@ -221,7 +229,7 @@ def _amalgamate_one_file(
                 options,
                 new_file,
                 included_filename_relative,
-                already_included_local_files,
+                already_included_guarded_local_files,
                 already_included_external_files,
             )
             if len(include_addition) > 0:
