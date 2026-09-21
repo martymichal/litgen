@@ -1358,7 +1358,8 @@ class PythonNamedConstructorHelper:
 
             # Find the constructor
             ctors = cpp_unit.all_cpp_elements_recursive(CppConstructorDecl)
-            assert len(ctors) == 1
+            if len(ctors) > 1:
+                raise SrcmlcppException("More than one constructor found.")
             ctor_decl = cast(CppConstructorDecl, ctors[0])
             if self.flag_generate_void_constructor():
                 ctor_decl.cpp_element_comments.comment_on_previous_lines = (
