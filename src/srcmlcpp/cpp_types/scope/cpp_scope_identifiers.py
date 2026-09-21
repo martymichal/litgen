@@ -4,15 +4,16 @@ from srcmlcpp.cpp_types.scope.cpp_scope_process import apply_scoped_identifiers_
 
 
 class CppScopeIdentifiers:
-    _scoped_identifiers: list[str]
+    _scoped_identifiers: tuple[str, ...]
 
     def __init__(self) -> None:
-        self._scoped_identifiers = []
+        self._scoped_identifiers = tuple()
 
     def fill_cache(self, all_elements: list[CppElement]) -> None:
         from srcmlcpp.cpp_types import CppStruct, CppFunctionDecl, CppEnum
         from srcmlcpp.cpp_types.decls_types.cpp_decl import CppDecl, CppDeclContext
 
+        new_scoped_identifiers: list[str] = []
         for element in all_elements:
             element_scope = element.cpp_scope()
             shall_add = False
@@ -36,7 +37,9 @@ class CppScopeIdentifiers:
                 assert isinstance(element, (CppStruct, CppFunctionDecl, CppDecl, CppEnum))
                 identifier_name = element.name()
                 qualified_identifier = element_scope.qualified_name(identifier_name)
-                self._scoped_identifiers.append(qualified_identifier)
+                new_scoped_identifiers.append(qualified_identifier)
+
+        self._scoped_identifiers = tuple((*self._scoped_identifiers, *new_scoped_identifiers))
 
     def qualify_cpp_code(self, cpp_code: str, current_scope: CppScope) -> str:
         """

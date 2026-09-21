@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, Iterator
 
 from srcmlcpp.cpp_types.base import (
     CppElementAndComment,
@@ -71,24 +71,16 @@ class CppBlock(CppElementAndComment):
                 result += "\n"
         return result
 
-    def all_functions(self) -> list[CppFunctionDecl]:
+    def all_functions(self) -> Iterator[CppFunctionDecl]:
         """Gathers all CppFunctionDecl and CppFunction in the children (non-recursive)"""
         from srcmlcpp.cpp_types.functions.cpp_function_decl import CppFunctionDecl
 
-        r: list[CppFunctionDecl] = []
-        for child in self.block_children:
-            if isinstance(child, CppFunctionDecl):
-                r.append(child)
-        return r
+        return (child for child in self.block_children if isinstance(child, CppFunctionDecl))
 
-    def all_functions_with_name(self, name: str) -> list[CppFunctionDecl]:
+    def all_functions_with_name(self, name: str) -> Iterator[CppFunctionDecl]:
         """Gathers all CppFunctionDecl and CppFunction matching a given name"""
         all_functions = self.all_functions()
-        r: list[CppFunctionDecl] = []
-        for fn in all_functions:
-            if fn.function_name == name:
-                r.append(fn)
-        return r
+        return (fn for fn in all_functions if fn.function_name == name)
 
     def all_structs_recursive(self) -> list[CppStruct]:
         """Gathers all CppStruct and CppClass in the children (*recursively*)"""
@@ -163,9 +155,17 @@ class CppBlock(CppElementAndComment):
 
     def is_function_overloaded(self, function: CppFunctionDecl) -> bool:
         functions_same_name = self.all_functions_with_name(function.function_name)
-        assert len(functions_same_name) >= 1
-        is_overloaded = len(functions_same_name) >= 2
-        return is_overloaded
+        assert functions_same_name
+
+        # To prevent unfolding the whole potentially long list of functions,
+        # let's just check that there are at least two functions with the same
+        # name.
+        next(functions_same_name)
+        try:
+            next(functions_same_name)
+        except StopIteration:
+            return False
+        return True
 
     def visit_cpp_breadth_first(self, cpp_visitor_function: CppElementsVisitorFunction, depth: int = 0) -> None:
         """Visits all the cpp children, and run the given function on them.

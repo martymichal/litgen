@@ -1,9 +1,12 @@
+import functools
+
 # Heart of the scoping mechanism. Those functions depend on no other module,
 # so that a possible improvement via Cython can be done.
 
 
+@functools.cache
 def current_token_matches_scoped_identifier(
-    scoped_identifier_qualified_name: str, current_scope_hierarchy: list[str], current_token: str
+    scoped_identifier_qualified_name: str, current_scope_hierarchy: set[str], current_token: str
 ) -> bool:
     """
     namespace A { enum E { Foo }; }
@@ -29,9 +32,9 @@ def current_token_matches_scoped_identifier(
             return True
     return False
 
-
+@functools.cache
 def apply_scoped_identifiers_to_code(
-    cpp_code: str, current_scope_hierarchy: list[str], scoped_identifier_qualified_names: list[str]
+    cpp_code: str, current_scope_hierarchy: set[str], scoped_identifier_qualified_names: set[str]
 ) -> str:
     new_code = ""
     current_token = ""
