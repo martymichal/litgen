@@ -156,9 +156,11 @@ def _decorate_code_info(info: str) -> str:
     separator_line = "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////"
     middle_line = f"//                       {info}".ljust(len(separator_line) - 2) + "//"
     result = f"""
+
 {separator_line}
 {middle_line}
 {separator_line}
+
 """
     return result
 
