@@ -64,10 +64,13 @@ def _fread_lines(filename: str) -> list[str]:
     Python 2 & 3 agnostic fopen + readlines
     """
     if version_info[0] >= 3:
-        f = open(filename, encoding="utf-8", errors="ignore")
+        with open(filename, encoding="utf-8", errors="ignore") as f:
+            return f.readlines()
     else:
         f = open(filename)
-    return f.readlines()
+        lines = f.readlines()
+        f.close()
+        return lines
 
 
 def _fread_content(filename: str) -> str:
