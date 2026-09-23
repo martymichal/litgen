@@ -63,6 +63,9 @@ class AdaptedEnumDecl(AdaptedDecl):
         decl_name_cpp_no_prefix = remove_case_insensitive_prefix_with_possible_underscore(
             decl_name_cpp_no_prefix, enum_name_cpp
         )
+        decl_name_cpp_no_prefix = remove_case_insensitive_prefix_with_possible_underscore(
+            decl_name_cpp_no_prefix, code_utils.to_snake_case(enum_name_cpp).upper()
+        )
 
         # We also remove the ImGuiTreeNodeFlags_ prefix from the private enum values
         # A specific case for ImGui, which defines private enums which may extend the public ones:
