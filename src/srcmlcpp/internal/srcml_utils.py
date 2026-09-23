@@ -5,6 +5,7 @@ This module *must* not depend on srcml_types!
 """
 
 from __future__ import annotations
+import functools
 import logging
 import os
 from typing import Any, Optional
@@ -13,7 +14,7 @@ from xml.etree import ElementTree as ET  # noqa
 
 from codemanip.code_position import CodePosition
 
-
+@functools.cache
 def _element_position(element: ET.Element, start_or_end: str) -> Optional[CodePosition]:
     r = None
     for key, value in element.attrib.items():
